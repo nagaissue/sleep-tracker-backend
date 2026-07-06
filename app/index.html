@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#1a237e" />
+  <meta name="theme-color" content="#1e3a8a" />
   <title>Sleep Tracker</title>
   <link rel="stylesheet" href="style.css" />
   <link rel="manifest" href="manifest.json" />
@@ -15,62 +15,148 @@
       <h1>😴 Sleep Tracker</h1>
     </header>
 
-    <!-- 音声入力エリア -->
-    <section class="card voice-section">
-      <h2>音声で記録</h2>
-      <p class="hint">例：「昨夜11時に就寝して今朝6時半に起床した」</p>
-      <div class="voice-controls">
-        <button id="btn-mic" class="btn btn-primary btn-large" onclick="toggleRecording()">
-          🎤 音声入力開始
-        </button>
-      </div>
-      <div id="transcript-box" class="transcript-box hidden">
-        <p id="transcript-text"></p>
-      </div>
-    </section>
+    <!-- タブナビゲーション -->
+    <nav class="tab-bar">
+      <button class="tab-btn active" data-tab="record">記録</button>
+      <button class="tab-btn" data-tab="calendar">カレンダー</button>
+      <button class="tab-btn" data-tab="stats">統計</button>
+    </nav>
 
-    <!-- 解析結果プレビュー -->
-    <section id="preview-section" class="card hidden">
-      <h2>解析結果</h2>
-      <div id="events-preview"></div>
-      <div class="action-row">
-        <button class="btn btn-outline" onclick="clearPreview()">やり直す</button>
-        <button class="btn btn-primary" onclick="registerToCalendar()">カレンダーに登録</button>
-      </div>
-    </section>
-
-    <!-- ステータスメッセージ -->
+    <!-- ステータスメッセージ（共通） -->
     <div id="status-msg" class="status-msg hidden"></div>
 
-    <!-- 睡眠統計ダッシュボード -->
-    <section class="card dashboard-section">
-      <h2>睡眠統計</h2>
-      <div id="dashboard-loading" class="loading-text">読み込み中...</div>
-      <div id="dashboard-content" class="hidden">
-        <div class="stats-grid">
-          <div class="stat-tile">
-            <span class="stat-label">平均睡眠時間</span>
-            <span id="stat-avg" class="stat-value">--</span>
-            <span class="stat-unit">時間</span>
+    <!-- ══════════════════ 記録タブ ══════════════════ -->
+    <section id="tab-record" class="tab-panel active">
+
+      <section class="card voice-section">
+        <h2>音声・テキストで記録</h2>
+        <p class="hint">「カテゴリー＋時刻」の形式で入力してください（例：就寝 23:00 / 起床 6:00 / 昼寝 14:00）</p>
+        <div class="voice-controls">
+          <button id="btn-mic" class="btn btn-primary btn-large" onclick="toggleRecording()">
+            🎤 音声入力開始
+          </button>
+        </div>
+        <div class="text-input-row">
+          <input id="text-input" type="text" class="text-input" placeholder="例：23:00に就寝、6:00に起床" />
+          <button class="btn btn-outline" onclick="handleTextParse()">解析</button>
+        </div>
+        <div id="transcript-box" class="transcript-box hidden">
+          <p id="transcript-text"></p>
+        </div>
+      </section>
+
+      <!-- 解析結果プレビュー -->
+      <section id="preview-section" class="card hidden">
+        <h2>解析結果</h2>
+        <div id="events-preview"></div>
+        <div class="action-row">
+          <button class="btn btn-outline" onclick="clearPreview()">やり直す</button>
+          <button class="btn btn-primary" onclick="saveEvents()">保存する</button>
+        </div>
+      </section>
+
+      <!-- カラー凡例 -->
+      <section class="card legend-section">
+        <h2>イベントカラー</h2>
+        <div class="legend-row"><span class="legend-dot" style="background:var(--sleep)"></span>就寝</div>
+        <div class="legend-row"><span class="legend-dot" style="background:var(--wake)"></span>起床</div>
+        <div class="legend-row"><span class="legend-dot" style="background:var(--nap)"></span>昼寝</div>
+      </section>
+    </section>
+
+    <!-- ══════════════════ カレンダータブ ══════════════════ -->
+    <section id="tab-calendar" class="tab-panel">
+      <section class="card">
+        <div class="month-nav">
+          <button class="nav-btn" onclick="changeMonth(-1)">‹</button>
+          <h2 id="month-label" class="month-label">--</h2>
+          <button class="nav-btn" onclick="changeMonth(1)">›</button>
+        </div>
+
+        <div class="weekday-row">
+          <span class="weekday sun">日</span>
+          <span class="weekday">月</span>
+          <span class="weekday">火</span>
+          <span class="weekday">水</span>
+          <span class="weekday">木</span>
+          <span class="weekday">金</span>
+          <span class="weekday sat">土</span>
+        </div>
+        <div id="calendar-grid" class="calendar-grid"></div>
+      </section>
+
+      <section id="day-detail" class="card hidden">
+        <h2 id="day-detail-title">--</h2>
+        <div id="day-detail-content"></div>
+      </section>
+
+      <p id="month-record-count" class="hint center-text"></p>
+    </section>
+
+    <!-- ══════════════════ 統計タブ ══════════════════ -->
+    <section id="tab-stats" class="tab-panel">
+      <section class="card dashboard-section">
+        <h2>睡眠統計（過去7日間）</h2>
+        <div id="dashboard-loading" class="loading-text">読み込み中...</div>
+        <div id="dashboard-content" class="hidden">
+          <div class="stats-grid">
+            <div class="stat-tile">
+              <span class="stat-label">平均睡眠時間</span>
+              <span id="stat-avg" class="stat-value">--</span>
+              <span class="stat-unit">時間</span>
+            </div>
+            <div class="stat-tile">
+              <span class="stat-label">昼寝回数</span>
+              <span id="stat-nap" class="stat-value">--</span>
+              <span class="stat-unit">回</span>
+            </div>
+            <div class="stat-tile">
+              <span class="stat-label">平均就寝時刻</span>
+              <span id="stat-bedtime" class="stat-value">--</span>
+            </div>
+            <div class="stat-tile">
+              <span class="stat-label">平均起床時刻</span>
+              <span id="stat-waketime" class="stat-value">--</span>
+            </div>
           </div>
-          <div class="stat-tile">
-            <span class="stat-label">昼寝回数</span>
-            <span id="stat-nap" class="stat-value">--</span>
-            <span class="stat-unit">回</span>
-          </div>
-          <div class="stat-tile">
-            <span class="stat-label">平均就寝時刻</span>
-            <span id="stat-bedtime" class="stat-value">--</span>
-          </div>
-          <div class="stat-tile">
-            <span class="stat-label">平均起床時刻</span>
-            <span id="stat-waketime" class="stat-value">--</span>
+          <div id="stat-empty" class="loading-text hidden">記録がまだありません</div>
+          <div class="chart-area">
+            <canvas id="sleep-chart"></canvas>
           </div>
         </div>
-        <div class="chart-area">
-          <canvas id="sleep-chart"></canvas>
+      </section>
+
+      <!-- AI睡眠分析 -->
+      <section class="card ai-section">
+        <h2>🤖 AI睡眠分析</h2>
+        <p class="hint">過去30日間の記録をGeminiが分析し、気づきと改善提案を提示します</p>
+        <button id="btn-analyze" class="btn btn-primary" onclick="runAnalysis()">分析を実行</button>
+
+        <div id="analysis-loading" class="loading-text hidden">Geminiが分析中...</div>
+        <div id="analysis-error" class="status-msg error hidden"></div>
+
+        <div id="analysis-result" class="hidden">
+          <div class="stats-grid">
+            <div class="stat-tile">
+              <span class="stat-label">生活リズムの規則性</span>
+              <span id="analysis-consistency" class="stat-value">--</span>
+              <span class="stat-unit">/ 100</span>
+            </div>
+            <div class="stat-tile">
+              <span class="stat-label">推定睡眠負債</span>
+              <span id="analysis-debt" class="stat-value">--</span>
+              <span class="stat-unit">時間</span>
+            </div>
+          </div>
+          <p id="analysis-summary" class="analysis-summary"></p>
+
+          <h3 class="analysis-subtitle">気づき</h3>
+          <ul id="analysis-insights" class="analysis-list"></ul>
+
+          <h3 class="analysis-subtitle">改善提案</h3>
+          <ul id="analysis-recommendations" class="analysis-list"></ul>
         </div>
-      </div>
+      </section>
     </section>
   </div>
 

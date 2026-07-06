@@ -2,9 +2,10 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --primary:    #1a237e;   /* 紺（就寝カラー基調） */
-  --accent:     #ffb878;   /* オレンジ黄（起床カラー） */
-  --nap:        #a4bdfc;   /* 薄青（昼寝カラー） */
+  --primary:    #1e3a8a;   /* 紺（就寝カラー） */
+  --sleep:      #1e3a8a;   /* 紺色 */
+  --wake:       #f97316;   /* オレンジ×黄 */
+  --nap:        #3b82f6;   /* 青色 */
   --bg:         #f5f7ff;
   --card:       #ffffff;
   --text:       #212121;
@@ -36,6 +37,35 @@ body {
 }
 .header h1 { font-size: 1.2rem; font-weight: 700; }
 
+/* ── タブバー ─────────────────────────────────────────── */
+.tab-bar {
+  display: flex;
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 52px;
+  z-index: 99;
+}
+.tab-btn {
+  flex: 1;
+  border: none;
+  background: transparent;
+  padding: 14px 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  transition: color .15s, border-color .15s;
+}
+.tab-btn.active {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+}
+
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
 /* ── カード ──────────────────────────────────────────── */
 .card {
   background: var(--card);
@@ -49,6 +79,12 @@ body {
   font-weight: 700;
   color: var(--primary);
   margin-bottom: 12px;
+}
+.card h3.analysis-subtitle {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text);
+  margin: 16px 0 8px;
 }
 
 /* ── ボタン ──────────────────────────────────────────── */
@@ -72,13 +108,28 @@ body {
 .btn:disabled  { opacity: 0.5; cursor: not-allowed; }
 .btn-large     { padding: 16px 32px; font-size: 1.1rem; border-radius: 50px; width: 100%; }
 
-/* ── 音声セクション ──────────────────────────────────── */
+/* ── 音声・テキスト入力セクション ───────────────────── */
 .voice-section .hint {
   font-size: 0.85rem;
   color: var(--muted);
   margin-bottom: 16px;
 }
 .voice-controls { display: flex; justify-content: center; margin-bottom: 16px; }
+
+.text-input-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.text-input {
+  flex: 1;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-family: inherit;
+}
+.text-input:focus { outline: none; border-color: var(--primary); }
 
 .transcript-box {
   background: var(--bg);
@@ -115,9 +166,23 @@ body {
   justify-content: flex-end;
 }
 
+/* ── カラー凡例 ──────────────────────────────────────── */
+.legend-section .legend-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 0;
+  font-size: 0.9rem;
+}
+.legend-dot {
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
 /* ── ステータスメッセージ ────────────────────────────── */
 .status-msg {
-  margin: 0 16px;
+  margin: 0 16px 16px;
   padding: 12px 16px;
   border-radius: 8px;
   font-size: 0.9rem;
@@ -151,6 +216,126 @@ body {
 #sleep-chart { width: 100% !important; height: 100% !important; }
 
 .loading-text { color: var(--muted); font-size: 0.9rem; text-align: center; padding: 20px 0; }
+.center-text { text-align: center; }
+
+/* ── AI睡眠分析 ──────────────────────────────────────── */
+.ai-section .hint {
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-bottom: 14px;
+}
+.ai-section .btn { width: 100%; margin-bottom: 14px; }
+.analysis-summary {
+  font-size: 0.9rem;
+  line-height: 1.6;
+  background: var(--bg);
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin-bottom: 4px;
+}
+.analysis-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.analysis-list li {
+  font-size: 0.88rem;
+  line-height: 1.5;
+  padding: 10px 12px;
+  background: var(--bg);
+  border-radius: 8px;
+  border-left: 3px solid var(--primary);
+}
+
+/* ── カレンダー ──────────────────────────────────────── */
+.month-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+.month-label { font-size: 1.05rem; }
+.nav-btn {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--primary);
+  font-size: 1.3rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.nav-btn:active { transform: scale(0.95); }
+
+.weekday-row {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  margin-bottom: 6px;
+}
+.weekday {
+  text-align: center;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--muted);
+  padding: 4px 0;
+}
+.weekday.sun { color: #ef4444; }
+.weekday.sat { color: #3b82f6; }
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+.day-cell {
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: background .1s;
+}
+.day-cell:not(.empty):hover { background: var(--bg); }
+.day-cell.empty { cursor: default; }
+.day-cell.today .day-num {
+  background: var(--primary);
+  color: #fff;
+  border-radius: 50%;
+  width: 22px; height: 22px;
+  display: flex; align-items: center; justify-content: center;
+}
+.day-cell.selected { background: #e3e8ff; }
+.day-num { font-weight: 600; }
+.dots-row { display: flex; gap: 2px; }
+.day-dot { width: 5px; height: 5px; border-radius: 50%; }
+
+.detail-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.9rem;
+}
+.detail-row:last-child { border-bottom: none; }
+.detail-row .dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+.detail-row .ev-type { font-weight: 700; min-width: 44px; }
+.detail-row .ev-time { color: var(--muted); flex: 1; }
+.delete-btn {
+  border: none;
+  background: transparent;
+  color: #c62828;
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 4px 8px;
+}
 
 /* ── ユーティリティ ──────────────────────────────────── */
 .hidden { display: none !important; }
